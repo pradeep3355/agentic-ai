@@ -10,12 +10,7 @@ from sqlalchemy import (
     Index,
     JSON,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
-import enum
 from sqlalchemy.orm import relationship, declarative_base
-from enum import Enum
-from sqlalchemy import Enum as SqlEnum
-from sqlalchemy.dialects.postgresql import ARRAY
 
 
 Base = declarative_base()

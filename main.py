@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.api import auth, chat
+from app.api import chat
 
 app = FastAPI()
 
