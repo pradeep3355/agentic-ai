@@ -16,6 +16,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
+    print(settings.POSTGRES_PORT)
     return (
         f"postgresql+psycopg2://"
         f"{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
