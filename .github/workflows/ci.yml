@@ -2,10 +2,11 @@ name: Python CI
 
 on:
   push:
-    branches: ["*"]
+    branches:
+      - "main"  # Only trigger for pushes to the main branch
   pull_request:
-    branches: ["*"]
-
+    branches:
+      - "main"  # Only trigger for PRs targeting the main branch
 jobs:
   test:
     runs-on: ubuntu-latest
