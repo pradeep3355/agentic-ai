@@ -3,28 +3,58 @@ version: '3.8'
 services:
   web:
     build: .
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"  # Only expose internally to other containers
     volumes:
       - .:/app
     environment:
       - PYTHONPATH=/app
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/agenticai
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:8080"  # Map host port 8080 to container port 8080
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      web:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
 
   db:
-    image: postgres:15
+    image: postgres:17
+    container_name: agentic_db
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=agenticai
+      - CONTAINER_NAME=agentic_db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    ports:
-      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agenticai -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:

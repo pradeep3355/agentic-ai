@@ -1,6 +1,6 @@
 from typing import Dict, Any
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from app.agents.graph import graph_agent  # Import the compiled graph
 
 # Import agent functions directly (not as classes)
@@ -55,16 +55,46 @@ class AgentService:
             }
             try:
                 result = await graph_agent.ainvoke(response_state)
+
+                # Handle different message formats
+                messages = result.get("messages", [])
+                print(f"Messages from graph_agent: {messages}")  # Debug log
+
+                if not messages:
+                    final_message = "No response generated"
+                else:
+                    last_message = messages[-1]
+                    print(f"Last message type: {type(last_message)}")  # Debug log
+
+                    try:
+                        # Handle LangChain's HumanMessage/AIMessage objects
+                        if hasattr(last_message, "content"):
+                            final_message = last_message.content
+                        # Handle dictionary format
+                        elif isinstance(last_message, dict):
+                            final_message = last_message.get(
+                                "content", str(last_message)
+                            )
+                        # Handle string or any other type
+                        else:
+                            final_message = str(last_message)
+
+                    except Exception as e:
+                        error_msg = f"Error extracting message content: {str(e)}"
+                        print(error_msg)
+                        final_message = (
+                            "An error occurred while processing the response"
+                        )
+
             except Exception as e:
                 error_msg = f"Error processing message: {str(e)}"
-            final_message = result.get("messages", [{}])[-1].get(
-                "content", "No response generated"
-            )
+                print(f"Error details: {error_msg}")
+                final_message = "An error occurred while processing your request"
 
             return {
                 "response_id": str(uuid.uuid4()),
                 "message": final_message,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "metadata": {
                     "thread_id": thread_id,
                     # Add any additional metadata from the graph execution
